@@ -1,0 +1,51 @@
+# Python cache and artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Flask/SQLAlchemy runtime data
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Machine learning outputs
+models/
+plots/
+
+# Datasets and large audio assets
+Data/
+aud/
+
+# TensorFlow/Keras saved models
+*.h5
+*.pb
+checkpoint
+
+# Node/JS
+node_modules/
+dist/
+build/
+npm-debug.log*
+
+# IDE/editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

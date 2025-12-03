@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Background Noise Remover</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .upload-section, .controls-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px dashed #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px 25px;
+            background: #667eea;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .file-input-label:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .audio-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .form-select, .form-range {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-select:focus, .form-range:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .range-value {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        
+        .model-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .process-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .process-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+        
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Audio Background Noise Remover</h1>
+            <p>Remove background noise from your audio files using advanced AI models</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">
+                    📁 Upload Audio File
+                </h2>
+                
+                <div class="file-input-wrapper">
+                    <input type="file" id="audioFile" class="file-input" accept="audio/*">
+                    <label for="audioFile" class="file-input-label">
+                        Choose Audio File
+                    </label>
+                </div>
+                
+                <div id="audioInfo" class="audio-info">
+                    <h4>File Information:</h4>
+                    <div id="fileDetails"></div>
+                </div>
+                
+                <div id="originalAudioPlayer"></div>
+            </div>
+            
+            <div class="controls-section">
+                <h2 class="section-title">
+                    ⚙️ Processing Settings
+                </h2>
+                
+                <div class="form-group">
+                    <label class="form-label">AI Model:</label>
+                    <select id="modelType" class="form-select">
+                        <option value="spectral_unet">Spectral U-Net (Fast)</option>
+                        <option value="rnn_denoiser">RNN Denoiser (Balanced)</option>
+                        <option value="wavenet">WaveNet (High Quality)</option>
+                    </select>
+                    <div id="modelInfo" class="model-info">
+                        U-Net architecture working in frequency domain - best for stationary noise
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        Noise Reduction Strength:
+                        <span id="strengthValue" class="range-value">80%</span>
+                    </label>
+                    <input type="range" id="strengthSlider" class="form-range" 
+                           min="10" max="100" value="80" step="5">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">User ID (Optional):</label>
+                    <input type="text" id="userId" class="form-select" placeholder="Enter your ID to track stats">
+                </div>
+                
+                <button id="processBtn" class="process-btn">
+                    🚀 Remove Background Noise
+                </button>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Processing your audio... This may take a few moments.</p>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
+        <div id="resultSection" class="result-section">
+            <h2 class="section-title">✨ Processed Audio</h2>
+            <div id="processedAudioPlayer"></div>
+            <div style="margin-top: 15px;">
+                <button id="downloadBtn" class="download-btn">📥 Download Cleaned Audio</button>
+                <span id="processingStats"></span>
+            </div>
+        </div>
+        
+        <div class="stats-section">
+            <div class="stat-card">
+                <div id="totalProcessed" class="stat-value">0</div>
+                <div class="stat-label">Files Processed</div>
+            </div>
+            <div class="stat-card">
+                <div id="totalDuration" class="stat-value">0m</div>
+                <div class="stat-label">Total Duration</div>
+            </div>
+            <div class="stat-card">
+                <div id="avgNoiseReduction" class="stat-value">0dB</div>
+                <div class="stat-label">Avg Noise Reduction</div>
+            </div>
+            <div class="stat-card">
+                <div id="memberSince" class="stat-value">Today</div>
+                <div class="stat-label">Member Since</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api';
+        let processedAudioBlob = null;
+        
+        // Model descriptions
+        const modelDescriptions = {
+            'spectral_unet': 'U-Net architecture working in frequency domain - best for stationary noise (AC, fan, hum)',
+            'rnn_denoiser': 'LSTM-based model for temporal noise patterns - best for time-varying noise (traffic, crowds)',
+            'wavenet': 'Time-domain processing with dilated convolutions - best for complex noise patterns and speech enhancement'
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAPIHealth();
+            loadUserStats();
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // File upload
+            document.getElementById('audioFile').addEventListener('change', handleFileSelect);
+            
+            // Model selection
+            document.getElementById('modelType').addEventListener('change', updateModelInfo);
+            
+            // Strength slider
+            document.getElementById('strengthSlider').addEventListener('input', updateStrengthValue);
+            
+            // Process button
+            document.getElementById('processBtn').addEventListener('click', processAudio);
+            
+            // Download button
+            document.getElementById('downloadBtn').addEventListener('click', downloadProcessedAudio);
+        }
+        
+        async function checkAPIHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    showSuccess('API is ready! Models loaded: ' + data.models_loaded.join(', '));
+                } else {
+                    showError('API health check failed');
+                }
+            } catch (error) {
+                showError('Could not connect to API. Make sure the Flask server is running.');
+            }
+        }
+        
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Show file info
+            const formData = new FormData();
+            formData.append('audio', file);
+            
+            try {
+                const response = await fetch(`${API_BASE}/audio-info`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayAudioInfo(data);
+                    createAudioPlayer('originalAudioPlayer', file, 'Original Audio');
+                } else {
+                    showError(data.error || 'Failed to analyze audio file');
+                }
+            } catch (error) {
+                showError('Error analyzing audio file: ' + error.message);
+            }
+        }
+        
+        function displayAudioInfo(info) {
+            const audioInfo = document.getElementById('audioInfo');
+            const fileDetails = document.getElementById('fileDetails');
+            
+            fileDetails.innerHTML = `
+                <p><strong>Filename:</strong> ${info.filename}</p>
+                <p><strong>Duration:</strong> ${info.duration} seconds</p>
+                <p><strong>Sample Rate:</strong> ${info.sample_rate} Hz</p>
+                <p><strong>Format:</strong> ${info.format}</p>
+            `;
+            
+            audioInfo.style.display = 'block';
+        }
+        
+        function createAudioPlayer(containerId, audioSource, title) {
+            const container = document.getElementById(containerId);
+            const url = audioSource instanceof File ? URL.createObjectURL(audioSource) : audioSource;
+            
+            container.innerHTML = `
+                <h4>${title}:</h4>
+                <audio controls class="audio-player">
+                    <source src="${url}" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+            `;
+        }
+        
+        function updateModelInfo() {
+            const modelType = document.getElementById('modelType').value;
+            const modelInfo = document.getElementById('modelInfo');
+            modelInfo.textContent = modelDescriptions[modelType];
+        }
+        
+        function updateStrengthValue() {
+            const slider = document.getElementById('strengthSlider');
+            const valueDisplay = document.getElementById('strengthValue');
+            valueDisplay.textContent = slider.value + '%';
+        }
+        
+        async function processAudio() {
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showError('Please select an audio file first');
+                return;
+            }
+            
+            const userId = document.getElementById('userId').value || 'anonymous';
+            const modelType = document.getElementById('modelType').value;
+            const strength = document.getElementById('strengthSlider').value / 100;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('processBtn').disabled = true;
+            document.getElementById('resultSection').style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('audio', file);
+            formData.append('user_id', userId);
+            formData.append('model_type', modelType);
+            formData.append('strength', strength);
+            
+            try {
+                const response = await fetch(`${API_BASE}/denoise-audio`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    processedAudioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(processedAudioBlob);
+                    
+                    // Show result
+                    createAudioPlayer('processedAudioPlayer', audioUrl, 'Processed Audio');
+                    document.getElementById('resultSection').style.display = 'block';
+                    
+                    showSuccess('Audio processed successfully!');
+                    loadUserStats(); // Refresh stats
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.error || 'Processing failed');
+                }
+            } catch (error) {
+                showError('Error processing audio: ' + error.message);
+            } finally {
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('processBtn').disabled = false;
+            }
+        }
+        
+        function downloadProcessedAudio() {
+            if (!processedAudioBlob) {
+                showError('No processed audio available for download');
+                return;
+            }
+            
+            const url = URL.createObjectURL(processedAudioBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'denoised_audio.wav';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        async function loadUserStats() {
+            const userId = document.getElementById('userId').value || 'anonymous';
+            
+            try {
+                const response = await fetch(`${API_BASE}/user-stats/${userId}`);
+                const stats = await response.json();
+                
+                document.getElementById('totalProcessed').textContent = stats.processed_count;
+                document.getElementById('totalDuration').textContent = stats.total_duration_minutes.toFixed(1) + 'm';
+                document.getElementById('avgNoiseReduction').textContent = stats.avg_noise_reduction_db.toFixed(1) + 'dB';
+                
+                if (stats.member_since) {
+                    const date = new Date(stats.member_since);
+                    document.getElementById('memberSince').textContent = date.toLocaleDateString();
+                } else {
+                    document.getElementById('memberSince').textContent = 'Today';
+                }
+            } catch (error) {
+                console.log('Could not load user stats:', error.message);
+            }
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            const successEl = document.getElementById('successMessage');
+            
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            successEl.style.display = 'none';
+            
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const errorEl = document.getElementById('errorMessage');
+            const successEl = document.getElementById('successMessage');
+            
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            
+            setTimeout(() => {
+                successEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Auto-refresh stats when user ID changes
+        document.getElementById('userId').addEventListener('blur', loadUserStats);
+    </script>
+</body>
+</html><!-- index.html content placeholder -->
