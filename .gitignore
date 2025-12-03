@@ -14,7 +14,6 @@ env/
 ENV/
 
 # Flask/SQLAlchemy runtime data
-instance/
 *.db
 *.sqlite
 *.sqlite3
@@ -25,10 +24,6 @@ instance/
 *.swp
 *.swo
 
-# Machine learning outputs
-models/
-plots/
-
 # Datasets and large audio assets
 Data/
 aud/
@@ -37,6 +32,11 @@ aud/
 *.h5
 *.pb
 checkpoint
+
+# Explicitly track these project artifacts
+!models/**
+!plots/**
+!instance/**
 
 # Node/JS
 node_modules/
